@@ -1,0 +1,58 @@
+# VAmPI Integration Tests
+# This is a test-only project, not a package to be installed
+
+[project]
+name = "vampi-integration-tests"
+version = "1.0.0"
+description = "Integration tests for VAmPI (Vulnerable API)"
+readme = "README.md"
+requires-python = ">=3.8"
+
+# Core dependencies - install these with: uv pip install pytest requests PyJWT pytest-timeout
+dependencies = [
+    "pytest>=7.4.0",
+    "requests>=2.31.0",
+    "PyJWT>=2.6.0",
+    "pytest-timeout>=2.1.0",
+]
+
+# Optional dependencies for advanced features
+# Install with: uv pip install pytest-xdist pytest-cov
+[project.optional-dependencies]
+dev = [
+    "pytest-xdist>=3.3.0",  # Parallel test execution
+    "pytest-cov>=4.1.0",    # Coverage reporting
+]
+
+[tool.pytest.ini_options]
+testpaths = ["."]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "--verbose",
+    "--tb=short",
+    "--strict-markers",
+    "-ra",
+]
+markers = [
+    "sqli: SQL Injection vulnerability tests",
+    "mass_assignment: Mass assignment vulnerability tests",
+    "bola: Broken Object Level Authorization tests",
+    "password: Unauthorized password change tests",
+    "enumeration: User enumeration vulnerability tests",
+    "redos: Regular Expression DoS tests",
+    "data_exposure: Excessive data exposure tests",
+    "weak_jwt: Weak JWT secret tests",
+    "rate_limiting: Rate limiting tests",
+    "slow: Tests that may take longer to run",
+]
+timeout = 300
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"

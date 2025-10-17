@@ -1,0 +1,30 @@
+# Pytest cache
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyo
+
+# Test outputs
+.coverage
+htmlcov/
+*.log
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# uv
+.uv_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
