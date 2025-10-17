@@ -1,0 +1,59 @@
+FROM python:3.11-alpine as builder
+RUN apk --update add bash nano g++
+COPY ./requirements.txt /vampi/requirements.txt
+WORKDIR /vampi
+RUN pip install -r requirements.txt
+
+# Build tools container with additional utilities
+FROM python:3.11-alpine
+
+# Install useful tools for API testing and interaction
+RUN apk --update add \
+    bash \
+    curl \
+    jq \
+    nano \
+    vim \
+    sqlite \
+    httpie \
+    && rm -rf /var/cache/apk/*
+
+COPY . /vampi
+WORKDIR /vampi
+COPY --from=builder /usr/local/lib /usr/local/lib
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Make all tools executable
+RUN chmod +x /vampi/tools/*.py 2>/dev/null || true
+
+# Add tools to PATH
+ENV PATH="/vampi/tools:${PATH}"
+
+# Create welcome script
+RUN echo '#!/bin/bash' > /usr/local/bin/vampi-tools && \
+    echo 'echo "╔═══════════════════════════════════════════════════════════════╗"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "║            VAmPI Tools Container - Ready for Testing         ║"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "╚═══════════════════════════════════════════════════════════════╝"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo ""' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "Available Tools:"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  • bootstrap.py - Populate database with sample data"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  • curl - Make HTTP requests"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  • http - HTTPie for better HTTP testing"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  • jq - JSON processor"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  • sqlite3 - Database inspection"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo ""' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "VAmPI API: $VAMPI_BASE_URL"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "Database: /vampi/database/database.db"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo ""' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "Quick Examples:"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  curl $VAMPI_BASE_URL/"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  http GET $VAMPI_BASE_URL/users/v1"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  sqlite3 /vampi/database/database.db \"SELECT COUNT(*) FROM users;\""' >> /usr/local/bin/vampi-tools && \
+    echo 'echo "  python tools/bootstrap.py --users 100 --books-per-user 10"' >> /usr/local/bin/vampi-tools && \
+    echo 'echo ""' >> /usr/local/bin/vampi-tools && \
+    chmod +x /usr/local/bin/vampi-tools
+
+# Display welcome message on container start
+RUN echo 'vampi-tools' >> /root/.bashrc
+
+CMD ["/bin/bash"]

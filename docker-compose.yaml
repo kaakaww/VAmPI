@@ -1,17 +1,88 @@
-version: "3"
-services:
- vampi-secure:
-  build: ./
-  container_name: vampi-secure
-  ports:
-   - 5001:5000
-  environment:
-   - vulnerable=0
+version: "3.8"
 
- vampi-vulnerable:
-  build: ./
-  container_name: vampi-vulnerable
-  ports:
-   - 5002:5000
-  environment:
-   - vulnerable=1
+# NOTE: Always use 'docker compose up --build' or 'make up' to ensure containers are rebuilt
+# This ensures you're running the latest code changes
+
+services:
+  # Main VAmPI vulnerable API service
+  vampi:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    pull_policy: build
+    container_name: vampi-vulnerable
+    ports:
+      - "5000:5000"
+    environment:
+      - vulnerable=1
+      - tokentimetolive=300
+    volumes:
+      - vampi-data:/vampi/database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - vampi-network
+    restart: unless-stopped
+
+  # Bootstrap service - initializes database with sample data
+  vampi-bootstrap:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    pull_policy: build
+    container_name: vampi-bootstrap
+    environment:
+      - BOOTSTRAP_USERS=${BOOTSTRAP_USERS:-50}
+      - BOOTSTRAP_BOOKS_PER_USER=${BOOTSTRAP_BOOKS_PER_USER:-5}
+    volumes:
+      - vampi-data:/vampi/database
+    entrypoint: ["/bin/sh"]
+    command:
+      - -c
+      - |
+        echo 'Waiting for VAmPI service to be ready...'
+        sleep 5
+        echo 'Bootstrapping database with sample data...'
+        python tools/bootstrap.py --users $${BOOTSTRAP_USERS} --books-per-user $${BOOTSTRAP_BOOKS_PER_USER}
+        echo 'Bootstrap complete! Database is ready for testing.'
+    depends_on:
+      vampi:
+        condition: service_healthy
+    networks:
+      - vampi-network
+    restart: "no"
+
+  # Tools container - provides utilities for testing and interaction
+  vampi-tools:
+    build:
+      context: ./
+      dockerfile: Dockerfile.tools
+    pull_policy: build
+    container_name: vampi-tools
+    environment:
+      - VAMPI_HOST=vampi
+      - VAMPI_PORT=5000
+      - VAMPI_BASE_URL=http://vampi:5000
+    volumes:
+      - vampi-data:/vampi/database
+      - ./tools:/vampi/tools
+    depends_on:
+      vampi:
+        condition: service_healthy
+    networks:
+      - vampi-network
+    stdin_open: true
+    tty: true
+    command: tail -f /dev/null  # Keep container running for interactive use
+
+networks:
+  vampi-network:
+    driver: bridge
+
+volumes:
+  vampi-data:
+    driver: local
