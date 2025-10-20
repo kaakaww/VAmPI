@@ -1,0 +1,6 @@
+# Base StackHawk configuration for VAmPI
+# Minimal configuration with basic spider only
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-base}
+  host: ${APP_HOST:http://localhost:5000}

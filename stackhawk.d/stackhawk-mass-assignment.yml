@@ -1,0 +1,36 @@
+# Mass assignment vulnerability scan for VAmPI
+# Tests registration endpoint with admin field (vulnerability when vuln=1)
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-mass-assignment}
+  host: ${APP_HOST:http://localhost:5000}
+
+  # Focus on registration endpoint
+  includePaths:
+    - "/users/v1/register"
+    - "/users/v1/login"
+    - "/me"
+
+  openApiConf:
+    filePath: openapi_specs/openapi3.yml
+    includeAllMethods: false
+    includedMethods:
+      - POST
+
+    customVariables:
+      - field: username
+        values:
+          - "testuser1"
+          - "testuser2"
+          - "testadmin"
+      - field: password
+        values:
+          - "pass123"
+      - field: email
+        values:
+          - "test@example.com"
+      # The mass assignment vulnerability allows setting admin field
+      - field: admin
+        values:
+          - "true"
+          - "false"

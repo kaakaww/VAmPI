@@ -1,0 +1,20 @@
+# Debug endpoint scan for VAmPI
+# Focuses on the vulnerable /users/v1/_debug endpoint
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-debug-endpoint}
+  host: ${APP_HOST:http://localhost:5000}
+
+  # Only scan debug and user endpoints
+  includePaths:
+    - "/users/v1/_debug"
+    - "/users/v1"
+    - "/"
+
+hawk:
+  spider:
+    base: false
+    custom:
+      command: |
+        curl -x $HTTP_PROXY http://localhost:5000/users/v1/_debug
+        curl -x $HTTP_PROXY http://localhost:5000/users/v1
