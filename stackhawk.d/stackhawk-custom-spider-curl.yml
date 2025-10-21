@@ -1,0 +1,28 @@
+# Custom spider configuration using curl for VAmPI
+# Uses curl commands to discover endpoints before scanning
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-custom-spider}
+  host: ${APP_HOST:http://localhost:5000}
+
+hawk:
+  spider:
+    # Disable base spider to rely only on custom discovery
+    base: false
+    custom:
+      # Execute multiple curl commands to discover API structure
+      command: |
+        curl -x $HTTP_PROXY http://localhost:5000/
+        curl -x $HTTP_PROXY http://localhost:5000/users/v1
+        curl -x $HTTP_PROXY http://localhost:5000/users/v1/_debug
+        curl -x $HTTP_PROXY http://localhost:5000/books/v1
+        curl -x $HTTP_PROXY -X POST http://localhost:5000/users/v1/login \
+          -H "Content-Type: application/json" \
+          -d '{"username":"name1","password":"pass1"}'
+        TOKEN=$(curl -s http://localhost:5000/users/v1/login \
+          -H "Content-Type: application/json" \
+          -d '{"username":"name1","password":"pass1"}' | grep -o '"auth_token":"[^"]*"' | cut -d'"' -f4)
+        curl -x $HTTP_PROXY http://localhost:5000/me \
+          -H "Authorization: Bearer $TOKEN"
+        curl -x $HTTP_PROXY http://localhost:5000/books/v1/bookTitle77 \
+          -H "Authorization: Bearer $TOKEN"

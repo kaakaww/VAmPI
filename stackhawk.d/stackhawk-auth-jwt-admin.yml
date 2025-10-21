@@ -1,0 +1,52 @@
+# JWT Authentication scan as admin user for VAmPI
+# Tests admin-privileged endpoints (e.g., DELETE /users/v1/{username})
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-auth-jwt-admin}
+  host: ${APP_HOST:http://localhost:5000}
+
+  authentication:
+    # Login as admin user
+    usernamePassword:
+      type: JSON
+      loginPath: /users/v1/login
+      usernameField: username
+      passwordField: password
+      scanUsername: "admin"
+      scanPassword: "pass1"
+
+    # Extract JWT token from response
+    tokenExtraction:
+      type: TOKEN_PATH
+      value: "auth_token"
+
+    # Use token in Authorization header
+    tokenAuthorization:
+      type: HEADER
+      value: Authorization
+      tokenType: Bearer
+
+    # Test path to verify authentication
+    testPath:
+      path: /me
+      success: ".*200.*"
+
+    # Logged in/out indicators
+    loggedInIndicator: ".*success.*"
+    loggedOutIndicator: ".*fail.*"
+
+  openApiConf:
+    # Path to OpenAPI spec file
+    filePath: openapi_specs/openapi3.yml
+    includeAllMethods: true
+
+    # Custom variables for admin operations
+    customVariables:
+      - field: username
+        values:
+          - "name1"
+          - "name2"
+      - field: book_title
+        values:
+          - "bookTitle77"
+          - "bookTitle85"

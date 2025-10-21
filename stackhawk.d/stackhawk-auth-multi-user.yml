@@ -1,0 +1,83 @@
+# Multi-user authentication scan for VAmPI
+# Tests with both admin and regular user privileges to identify authorization issues
+# Uses bootstrap user credentials: name2/pass2 (user) and admin/pass1 (admin)
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-auth-multi-user}
+  host: ${APP_HOST:http://localhost:5000}
+
+  authentication:
+    # Logged in/out indicators
+    loggedInIndicator: "HTTP.*200.*"
+    loggedOutIndicator: "HTTP.*401.*"
+
+    # Default authentication configuration
+    usernamePassword:
+      type: JSON
+      loginPath: /users/v1/login
+      usernameField: username
+      passwordField: password
+      scanUsername: name2
+      scanPassword: pass2
+
+    # Extract JWT token from response
+    tokenExtraction:
+      type: TOKEN_PATH
+      value: auth_token
+
+    # Use token in Authorization header
+    tokenAuthorization:
+      type: HEADER
+      value: Authorization
+      tokenType: Bearer
+
+    # Test path to verify authentication
+    testPath:
+      path: /me
+      success: ".*200.*"
+
+    # Multi-user profiles for authorization testing
+    profiles:
+      - name: MEMBER
+        userNamePassword:
+          username: name2
+          password: pass2
+      - name: ADMIN
+        userNamePassword:
+          username: admin
+          password: pass1
+        isPrivileged: true
+
+  openApiConf:
+    # Path to OpenAPI spec file
+    filePath: openapi_specs/openapi3.yml
+    includeAllMethods: true
+
+    # Custom variables for parameterized endpoints
+    customVariables:
+      - field: username
+        values:
+          - "name1"
+          - "name2"
+          - "admin"
+      - field: book_title
+        values:
+          - "bookTitle77"
+          - "bookTitle85"
+          - "bookTitle47"
+      - field: email
+        values:
+          - "updated1@example.com"
+          - "updated2@example.com"
+      - field: password
+        values:
+          - "newpass123"
+      - field: secret
+        values:
+          - "test_secret_data"
+hawk:
+  spider:
+    base: false
+  scan:
+    policyName: DANA_FAKE_POLICY
+

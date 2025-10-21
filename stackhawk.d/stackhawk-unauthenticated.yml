@@ -1,0 +1,34 @@
+# Unauthenticated endpoints scan for VAmPI
+# Focuses on public endpoints that don't require authentication
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-unauth}
+  host: ${APP_HOST:http://localhost:5000}
+
+  # Exclude authenticated endpoints
+  excludePaths:
+    - "/me"
+    - "/users/v1/*/email"
+    - "/users/v1/*/password"
+    - "/books/v1/*"
+
+  openApiConf:
+    filePath: openapi_specs/openapi3.yml
+    includeAllMethods: false
+    includedMethods:
+      - GET
+      - POST
+
+    customVariables:
+      - field: username
+        values:
+          - "name1"
+          - "name2"
+          - "testuser"
+      - field: email
+        values:
+          - "test@example.com"
+          - "user@test.com"
+      - field: password
+        values:
+          - "testpass123"

