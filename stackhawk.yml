@@ -1,0 +1,47 @@
+# This config works in the preprod environment and posts results to the "corporate" shared StackHawk account
+app:
+  applicationId: ${APP_ID:081b5301-cf88-4b5f-9df4-b351484fc48c}
+  env: ${APP_ENV:Development}
+  host: http://localhost:5000
+  openApiConf:
+    filePath: openapi_specs/openapi3.yml
+  authentication:
+    loggedInIndicator: "HTTP.*20[0-9].*"
+    loggedOutIndicator: "HTTP.*401.*"
+    tokenAuthorization:
+      type: HEADER
+      value: Authorization
+      tokenType: Bearer
+    testPath:
+      path: /me
+      success: ".*200.*"
+    tokenExtraction:
+      # The type of extraction. In this case we're expecting the authorization token
+      # To be returned as a custom header, X-AuthToken, from a successful authentication.
+      type: TOKEN_PATH
+      # The name of the header in the response from authentication.
+      value: auth_token
+    # Token based authorization. If your app doesn't use cookies to maintain session/authorization state then
+    # you'll likely need to pass the token on every request to the authenticated routes of your application.
+    usernamePassword:
+      type: JSON
+      loginPath: /users/v1/login
+      loginPagePath: /users/v1/login
+      usernameField: username
+      passwordField: password
+      scanUsername: "admin"
+      scanPassword: "pass1"
+    profiles:
+      - name: MEMBER
+        userNamePassword:
+          username: name1
+          password: pass1
+      - name: ADMIN
+        isPrivileged: true
+        userNamePassword:
+          username: admin
+          password: pass1
+hawk:
+  spider:
+    base: false
+    enableSmartCrawling: true
